@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>the-board · viewer</title>
+  <link rel="stylesheet" href="/static/board.css">
+  <style>
+    body.transparent, body.transparent #board { background: transparent !important; }
+    #status {
+      position: fixed; right: 8px; top: 8px; z-index: 2000000;
+      padding: 2px 8px; border-radius: 4px;
+      background: #b3261e; color: #fff; display: none;
+    }
+    body.offline #status { display: block; }
+  </style>
+</head>
+<body>
+  <div id="board"><div id="objects"></div></div>
+  <div id="status">reconnecting…</div>
+  <script type="module">
+    import { connect, createRenderer, newId } from "/static/board.js";
+
+    const clientId = newId();
+    const board = document.getElementById("board");
+    const renderer = createRenderer(document.getElementById("objects"));
+    // ?transparent lets the viewer be dropped into OBS/browser sources as an overlay.
+    const transparent = new URLSearchParams(location.search).has("transparent");
+    document.body.classList.toggle("transparent", transparent);
+
+    function reportViewport() {
+      fetch("/api/viewport", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ clientId, w: window.innerWidth, h: window.innerHeight }),
+      }).catch(() => {});
+    }
+
+    const source = connect("viewer", clientId, {
+      onOpen() {
+        document.body.classList.remove("offline");
+        reportViewport();
+      },
+      onState(state) {
+        if (!transparent) board.style.background = state.board.bg;
+        renderer.render(state.objects);
+      },
+    });
+    source.addEventListener("error", () => document.body.classList.add("offline"));
+    window.addEventListener("resize", reportViewport);
+  </script>
+</body>
+</html>

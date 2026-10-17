@@ -1,0 +1,13 @@
+{
+  "name": "the-board",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Live board: an editor and synced viewers sharing one bottom-left-anchored canvas.",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

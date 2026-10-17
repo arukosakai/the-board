@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>the-board · editor</title>
+  <link rel="stylesheet" href="/static/board.css">
+  <link rel="stylesheet" href="/static/editor.css">
+</head>
+<body>
+  <div id="board">
+    <div id="objects"></div>
+    <div id="viewports"></div>
+    <div id="overlay"></div>
+  </div>
+
+  <p id="empty-hint" class="ui">Paste or drop an image / GIF, or press <kbd>T</kbd> for text</p>
+
+  <div id="toolbar" class="panel ui">
+    <button class="icon" data-action="add-text" title="Add text (T)">
+      <svg viewBox="0 0 24 24"><path d="M4 7V5h16v2M9 19h6M12 5v14"/></svg>
+    </button>
+    <label class="icon button" title="Add image (or just paste / drop one)">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg>
+      <input id="file-input" type="file" accept="image/*" multiple hidden>
+    </label>
+    <span class="sep"></span>
+    <button class="icon" data-action="to-front" data-needs-selection title="Bring to front (Home)">
+      <svg viewBox="0 0 24 24"><path d="M5 3h14M18 13l-6-6-6 6M12 7v14"/></svg>
+    </button>
+    <button class="icon" data-action="forward" data-needs-selection title="Bring forward (PageUp)">
+      <svg viewBox="0 0 24 24"><path d="m5 12 7-7 7 7M12 19V5"/></svg>
+    </button>
+    <button class="icon" data-action="backward" data-needs-selection title="Send backward (PageDown)">
+      <svg viewBox="0 0 24 24"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
+    </button>
+    <button class="icon" data-action="to-back" data-needs-selection title="Send to back (End)">
+      <svg viewBox="0 0 24 24"><path d="M19 21H5M6 11l6 6 6-6M12 17V3"/></svg>
+    </button>
+    <span class="sep"></span>
+    <button class="icon" data-action="duplicate" data-needs-selection title="Duplicate (Ctrl+D)">
+      <svg viewBox="0 0 24 24"><rect x="8" y="8" width="13" height="13" rx="2"/><path d="M4 16V5a1 1 0 0 1 1-1h11"/></svg>
+    </button>
+    <button class="icon" data-action="delete" data-needs-selection title="Delete (Del)">
+      <svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>
+    </button>
+    <span class="sep"></span>
+    <button class="icon" id="undo" data-action="undo" title="Undo (Ctrl+Z)">
+      <svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>
+    </button>
+    <button class="icon" id="redo" data-action="redo" title="Redo (Ctrl+Shift+Z)">
+      <svg viewBox="0 0 24 24"><path d="m15 14 5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/></svg>
+    </button>
+    <span class="sep"></span>
+    <button class="icon" data-action="toggle-menu" title="More">
+      <svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg>
+    </button>
+    <span id="conn" title="Sync status"></span>
+
+    <div id="menu" class="panel" hidden>
+      <label class="item">Board color <input id="board-bg" type="color"></label>
+      <a class="item" href="/viewer" target="_blank">Open viewer <span class="hint">↗</span></a>
+      <hr>
+      <div id="png-targets"></div>
+      <button class="item" data-action="export-board">Export board file</button>
+      <label class="item">Import board file…<input id="import-input" type="file" accept=".json,application/json" hidden></label>
+      <hr>
+      <button class="item" data-action="toggle-ui">Hide UI <kbd>H</kbd></button>
+    </div>
+  </div>
+
+  <div id="side" class="panel ui">
+    <section id="props" hidden>
+      <div id="text-props">
+        <textarea id="p-text" rows="2" spellcheck="false" placeholder="Text"></textarea>
+        <div class="field">
+          <span>Font</span>
+          <select id="p-font">
+            <option value="sans">Sans</option>
+            <option value="serif">Serif</option>
+            <option value="mono">Mono</option>
+            <option value="impact">Impact</option>
+          </select>
+          <input id="p-fontSize" type="number" min="4" max="1000" step="1" title="Font size">
+        </div>
+        <div class="field">
+          <span>Style</span>
+          <label class="toggle" title="Bold"><input id="p-bold" type="checkbox"><b>B</b></label>
+          <label class="toggle" title="Italic"><input id="p-italic" type="checkbox"><i>I</i></label>
+          <select id="p-align" title="Alignment">
+            <option value="left">Left</option>
+            <option value="center">Center</option>
+            <option value="right">Right</option>
+          </select>
+        </div>
+        <div class="field">
+          <span>Color</span>
+          <input id="p-color" type="color" title="Text color">
+        </div>
+        <div class="field">
+          <span>Backdrop</span>
+          <input id="p-bg" type="color" title="Backdrop color">
+          <input id="p-bgOpacity" type="range" min="0" max="1" step="0.01" title="Backdrop opacity">
+        </div>
+      </div>
+      <div class="field">
+        <span>Opacity</span>
+        <input id="p-opacity" type="range" min="0" max="1" step="0.01">
+      </div>
+      <div class="field">
+        <span>Rotate</span>
+        <input id="p-rot" type="number" step="1">
+        <button class="icon small" data-action="reset-rotation" title="Reset rotation">
+          <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+        </button>
+        <button id="image-props" class="small" data-action="natural-size" title="Original size">1:1</button>
+      </div>
+      <div class="hint" id="geom"></div>
+    </section>
+
+    <section id="layers-section">
+      <button class="section-title" data-action="toggle-layers">
+        Layers <span class="hint" id="layer-count"></span><span class="chevron">▾</span>
+      </button>
+      <ol id="layers"></ol>
+    </section>
+  </div>
+
+  <div id="toast" class="ui"></div>
+
+  <script type="module" src="/static/editor.js"></script>
+</body>
+</html>
